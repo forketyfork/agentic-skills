@@ -1,0 +1,20 @@
+{
+  "name": "agentic-skills",
+  "owner": {
+    "name": "Forketyfork"
+  },
+  "metadata": {
+    "description": "Claude Code skills by Forketyfork",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "airtight-plans",
+      "description": "Write structured multi-step implementation plans in markdown format. Plans use numbered steps with clear titles and detailed instructions.",
+      "source": "./",
+      "skills": [
+        "./skills/airtight-plans"
+      ]
+    }
+  ]
+}
