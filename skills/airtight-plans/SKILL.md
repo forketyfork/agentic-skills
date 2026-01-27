@@ -218,3 +218,37 @@ Save the plan as a markdown file with:
 1. Title: `# Feature: Name` or `# Task: Name`
 2. Overview (brief description)
 3. Steps (numbered, following format above)
+
+---
+
+## Working with This Plan
+
+### For Implementers
+
+1. **Work sequentially.** Complete steps in order—each step builds on the previous one.
+
+2. **Verify status quo.** Before starting a step, confirm the conditions in "Status Quo" are met. If not, something may have gone wrong in a previous step.
+
+3. **Meet acceptance criteria.** A step is complete only when all acceptance criteria pass. Don't proceed to the next step until they do.
+
+4. **Flag blockers early.** If a step is impossible due to missing information, incorrect assumptions, or technical constraints, stop and raise the issue rather than improvising.
+
+5. **Don't over-engineer.** Implement exactly what's specified. Save improvements and refactors for separate tasks.
+
+6. **Keep the codebase working.** After each step, the code should build and tests should pass. Never leave the codebase in a broken state between steps.
+
+### For Reviewers
+
+1. **Review the plan before implementation.** Check that:
+   - Steps are correctly ordered (no step depends on something done later)
+   - Status quo for each step follows logically from previous steps
+   - Acceptance criteria are verifiable, not just restated requirements
+   - No critical steps are missing
+   - Step granularity is appropriate (not too coarse, not too granular)
+
+2. **Review implementation against the plan.** For each step, verify:
+   - The acceptance criteria are actually met
+   - No unplanned changes were introduced
+   - The implementation matches the tech notes where specified
+
+3. **Track deviations.** If the implementation necessarily diverges from the plan, ensure the deviation is documented and justified. Update the plan if it will be reused.
