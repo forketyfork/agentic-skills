@@ -21,16 +21,25 @@ Extract the PR number, branch name, base branch, title, and description. Pay att
 
 ## Step 2: Get PR comments and review feedback
 
-Fetch conversation comments and review comments to understand the discussion around the PR:
+Fetch conversation comments and review comments to understand the discussion around the PR.
+
+**Important:** Avoid `!=` in jq expressions (bash history expansion escapes `!` to `\!`). Use `length > 0` instead. Also avoid jq string interpolation `\(...)` inside arguments — use string concatenation with `+` instead.
 
 ```
-gh pr view <pr> --json comments --jq '.comments[] | "**\(.author.login)**: \(.body)\n"'
+gh pr view <pr> --json comments --jq '.comments[] | "**" + .author.login + "**: " + .body'
 ```
 
-For inline review comments (code-level feedback):
+For review-level comments:
 
 ```
-gh pr view <pr> --json reviews --jq '.reviews[] | select(.body != "") | "**\(.author.login)** (\(.state)): \(.body)\n"'
+gh pr view <pr> --json reviews --jq '.reviews[] | select(.body | length > 0) | "**" + .author.login + "** (" + .state + "): " + .body'
+```
+
+For inline code-level review comments, first get the repo from the PR URL, then use the API:
+
+```
+gh pr view <pr> --json url --jq '.url'
+gh api repos/<owner>/<repo>/pulls/<pr-number>/comments --paginate --jq '.[] | "**" + .user.login + "** on `" + .path + "`:\n" + .body + "\n---"'
 ```
 
 These comments provide valuable context — they may reveal why certain decisions were made, what was revised, or what trade-offs were considered. Weave relevant insights from the discussion into your narrative where appropriate.
