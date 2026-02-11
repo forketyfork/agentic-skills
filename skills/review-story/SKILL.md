@@ -23,7 +23,7 @@ Extract the PR number, branch name, base branch, title, and description. Pay att
 
 Fetch conversation comments and review comments to understand the discussion around the PR.
 
-**Important:** Avoid `!=` in jq expressions (bash history expansion escapes `!` to `\!`). Use `length > 0` instead. Also avoid jq string interpolation `\(...)` inside arguments — use string concatenation with `+` instead.
+**Important:** In interactive Bash shells, `!` triggers history expansion and can break jq expressions that use `!=`. Avoid `!=` in jq expressions; use `length > 0` instead. Also avoid jq string interpolation `\(...)` inside arguments — use string concatenation with `+` instead.
 
 ```
 gh pr view <pr> --json comments --jq '.comments[] | "**" + .author.login + "**: " + .body'
@@ -47,7 +47,7 @@ These comments provide valuable context — they may reveal why certain decision
 ## Step 3: Get the commit history
 
 ```
-gh pr view <pr> --json commits --jq '.commits[] | "\(.oid) \(.messageHeadline)"'
+gh pr view <pr> --json commits --jq '.commits[] | .oid + " " + .messageHeadline'
 ```
 
 If there are multiple commits, this is important — you will narrate the evolution of changes commit by commit.
@@ -62,11 +62,11 @@ If the diff is very large (over ~2000 lines), focus on the most structurally sig
 
 ## Step 5: If multiple commits exist, examine evolution
 
-For each significant commit, look at what specifically changed:
+For each significant commit, look at what specifically changed. Use the GitHub API so commits are available even when the local clone doesn't have the objects (e.g. fork-based PRs):
 
 ```
-git show <commit-sha> --stat
-git show <commit-sha> -- <specific-file>
+gh api repos/<owner>/<repo>/commits/<commit-sha> --jq '.files[] | .filename + " | " + .status + " | +" + (.additions | tostring) + " -" + (.deletions | tostring)'
+gh api repos/<owner>/<repo>/commits/<commit-sha> --jq '.files[] | select(.filename == "<specific-file>") | .patch'
 ```
 
 This helps you explain HOW the code evolved across commits, not just the final state.
