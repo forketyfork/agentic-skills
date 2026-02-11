@@ -15,6 +15,14 @@
       "skills": [
         "./skills/airtight-plans"
       ]
+    },
+    {
+      "name": "review-story",
+      "description": "Generate a narrative story of a PR's changes with embedded code snippets. Gathers PR metadata, comments, review feedback, commit history, and the full diff, then writes a prose walkthrough.",
+      "source": "./",
+      "skills": [
+        "./skills/review-story"
+      ]
     }
   ]
 }
