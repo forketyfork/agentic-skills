@@ -107,7 +107,8 @@ When the prose needs to point the reader to specific lines in the immediately fo
 
 - In prose, use **`**[N]**`** — visible bold markers that readers can follow
 - In code, use **`<!--ref:N-->`** appended to the referenced line
-- Reference numbers reset with each snippet (always start from 1)
+- Reference numbers are unique throughout the entire story (1, 2, 3, ...) — never restart numbering
+- The prose anchor **[N]** must always appear *before* the code snippet containing its matching `<!--ref:N-->`
 - Only use references when they genuinely aid comprehension — not every snippet needs them
 
 ````markdown
