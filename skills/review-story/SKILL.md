@@ -23,7 +23,7 @@ Extract the PR number, branch name, base branch, title, and description. Pay att
 
 Fetch conversation comments and review comments to understand the discussion around the PR.
 
-**Important:** In interactive Bash shells, `!` triggers history expansion and can break jq expressions that use `!=`. Avoid `!=` in jq expressions; use `length > 0` instead. Also avoid jq string interpolation `\(...)` inside arguments — use string concatenation with `+` instead.
+**Important:** In interactive Bash shells, the history expansion character can break jq expressions that use the "not equal" operator. Avoid using that operator in jq; use `length > 0` instead. Also avoid jq string interpolation `\(...)` inside arguments — use string concatenation with `+` instead.
 
 ```
 gh pr view <pr> --json comments --jq '.comments[] | "**" + .author.login + "**: " + .body'
