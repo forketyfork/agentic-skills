@@ -1,16 +1,20 @@
-# Airtight Plans
+# Agentic Skills
 
-A Claude Code skill for writing structured multi-step implementation plans in markdown format.
+A collection of Claude Code skills for structured development workflows.
 
-## Why "Airtight"?
+## Skills
 
-Every step includes four sections that leave no gaps:
-- **Status Quo** - What exists before this step
-- **Objectives** - What we're trying to achieve
-- **Tech Notes** - How to implement it
-- **Acceptance Criteria** - How to verify it's done
+### airtight-plans
 
-No ambiguity, no missing context, no gaps.
+Writes structured multi-step implementation plans in markdown format. Each step includes four sections: Status Quo, Objectives, Tech Notes, and Acceptance Criteria.
+
+Activates when you ask Claude to create an implementation plan, development roadmap, or multi-step task breakdown.
+
+### review-story
+
+Generates a narrative story of a pull request's changes with embedded code snippets. Gathers PR metadata, comments, review feedback, commit history, and the full diff, then writes a flowing prose walkthrough interspersed with annotated `story-diff` code blocks.
+
+Activates when you ask Claude to create a PR story or narrative walkthrough of a pull request.
 
 ## Installation
 
@@ -19,45 +23,7 @@ In Claude Code:
 ```
 /plugin marketplace add forketyfork/agentic-skills
 /plugin install airtight-plans@agentic-skills
-```
-
-## What It Does
-
-This skill helps Claude write implementation plans with:
-
-- Numbered steps (`## Step N: Title`)
-- Four sections per step:
-  - **Status Quo** - What exists at the start
-  - **Objectives** - Business requirements and goals
-  - **Tech Notes** - Implementation hints (optional)
-  - **Acceptance Criteria** - Verification steps
-
-## When It Activates
-
-The skill activates when you ask Claude to:
-- Create an implementation plan
-- Write a development roadmap
-- Break down a multi-step task
-
-## Example Output
-
-```markdown
-## Step 1: Create user model
-
-### Status Quo
-- Database is configured with migrations support
-- No user-related tables exist yet
-
-### Objectives
-Create the foundational User model to store account credentials.
-
-### Tech Notes
-- Use UUID for id to avoid enumeration attacks
-- Store passwordHash, never plain passwords
-
-### Acceptance Criteria
-- `just test` passes including new user model tests
-- Unit test verifies passwordHash !== plaintext password
+/plugin install review-story@agentic-skills
 ```
 
 ## License
