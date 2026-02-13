@@ -19,6 +19,7 @@ skills/
 
 - **airtight-plans** — Generates structured multi-step implementation plans with Status Quo, Objectives, Tech Notes, and Acceptance Criteria sections per step.
 - **review-story** — Generates narrative PR walkthroughs with `story-diff` code blocks and line references. Uses `gh` CLI to gather PR data.
+- **managing-youtrack** — Interacts with YouTrack issue tracker via REST API. Manages issues, drafts, comments, tags, links, time tracking, custom fields, saved queries, users, and groups.
 
 ## Writing Skills
 
