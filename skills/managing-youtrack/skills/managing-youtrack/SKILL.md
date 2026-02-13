@@ -17,7 +17,7 @@ allowed-tools:
 
 ## Setup (minimal)
 - Env vars: `YOUTRACK_URL`, `YOUTRACK_TOKEN`.
-- Always include `Authorization: Bearer $YOUTRACK_TOKEN` and `Accept: application/json`; add `Content-Type: application/json` for write calls.
+- Always pass the auth header via process substitution to avoid token exposure in command-line arguments: `-H @<(echo "Authorization: Bearer $YOUTRACK_TOKEN")`. Always include `Accept: application/json`; add `Content-Type: application/json` for write calls.
 - For queries containing spaces or symbols, use `curl -G --data-urlencode "query=..."` instead of embedding the query string.
 - Request only needed fields via the `fields` parameter; default minimal issue fields: `idReadable,summary`.
 
