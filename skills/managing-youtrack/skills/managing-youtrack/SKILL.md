@@ -8,7 +8,7 @@ description: |
   update tickets, add comments, manage tags or links, track time, or search
   for issues. Requires YOUTRACK_URL and YOUTRACK_TOKEN environment variables.
 allowed-tools:
-  - Bash(curl:*)
+  - Bash(bash:*)
   - Read
   - AskUserQuestion
 ---
