@@ -83,7 +83,7 @@ yt_get "issues/PROJ-123/timeTracking/workItems?fields=id,author(login,name),text
 yt_post "issues/PROJ-123/timeTracking/workItems?fields=id,duration(minutes,presentation),date,type(name),text" '{
   "duration": {"minutes": 90},
   "text": "Implemented feature X",
-  "date": 1700000000000,
+  "date": <TIMESTAMP_MS>,
   "type": {"id": "<WORK_TYPE_ID>"}
 }'
 ```

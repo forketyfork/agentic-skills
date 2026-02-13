@@ -29,9 +29,9 @@ Examples below use shorthand for brevity — expand to full `curl` with the head
 
 ## API Reference
 
-**Issues, drafts & comments**: See [reference/issues.md](reference/issues.md)
-**Tags, links & time tracking**: See [reference/metadata.md](reference/metadata.md)
-**Field schema, saved queries, users, groups & projects**: See [reference/admin.md](reference/admin.md)
+- **Issues, drafts & comments**: See [reference/issues.md](reference/issues.md)
+- **Tags, links & time tracking**: See [reference/metadata.md](reference/metadata.md)
+- **Field schema, saved queries, users, groups & projects**: See [reference/admin.md](reference/admin.md)
 
 ## Field quick reference
 
@@ -53,7 +53,7 @@ Examples below use shorthand for brevity — expand to full `curl` with the head
 
 | Field type | $type |
 |---|---|
-| Single enum (State, Priority, Type) | `SingleEnumIssueCustomField` |
+| Single enum (Priority, Type) | `SingleEnumIssueCustomField` |
 | Multi enum | `MultiEnumIssueCustomField` |
 | Single user (Assignee) | `SingleUserIssueCustomField` |
 | Multi user | `MultiUserIssueCustomField` |
