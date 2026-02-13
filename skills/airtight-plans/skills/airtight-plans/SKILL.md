@@ -1,7 +1,6 @@
 ---
 name: airtight-plans
 description: Write structured multi-step implementation plans in markdown format. Plans use numbered steps with clear titles and detailed instructions. Use when asked to create an implementation plan, development roadmap, or multi-step task breakdown.
-license: Complete terms in LICENSE.txt
 ---
 
 # Writing Implementation Plans
