@@ -11,26 +11,17 @@
     {
       "name": "airtight-plans",
       "description": "Write structured multi-step implementation plans in markdown format. Plans use numbered steps with clear titles and detailed instructions.",
-      "source": "./",
-      "skills": [
-        "./skills/airtight-plans"
-      ]
+      "source": "./skills/airtight-plans"
     },
     {
       "name": "review-story",
       "description": "Generate a narrative story of a PR's changes with embedded code snippets. Gathers PR metadata, comments, review feedback, commit history, and the full diff, then writes a prose walkthrough.",
-      "source": "./",
-      "skills": [
-        "./skills/review-story"
-      ]
+      "source": "./skills/review-story"
     },
     {
       "name": "managing-youtrack",
       "description": "Interact with YouTrack issue tracker via REST API. Create, read, update, and search issues and drafts; manage comments, tags, and issue links; log work items; inspect custom field schemas; list saved queries; look up users and groups.",
-      "source": "./",
-      "skills": [
-        "./skills/managing-youtrack"
-      ]
+      "source": "./skills/managing-youtrack"
     }
   ]
 }
