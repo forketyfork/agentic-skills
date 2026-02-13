@@ -27,6 +27,12 @@ Examples below use shorthand for brevity — expand to full `curl` with the head
 - `yt_post "path" '{...}'` → same with `-X POST -H "Content-Type: application/json" -d '{...}'`
 - `yt_delete "path"` → same with `-X DELETE`
 
+**URL encoding**: For GET requests with query parameters that may contain special characters (`:`, `#`, spaces, etc.), use curl's `-G` flag with `--data-urlencode` instead of embedding values directly in the URL. This applies especially to the `query` parameter in issue searches. Example:
+
+```bash
+yt_get "issues?fields=idReadable,summary" -G --data-urlencode "query=for: me #Unresolved"
+```
+
 ## API Reference
 
 - **Issues, drafts & comments**: See [reference/issues.md](reference/issues.md)
