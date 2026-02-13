@@ -8,7 +8,7 @@ description: |
   update tickets, add comments, manage tags or links, track time, or search
   for issues. Requires YOUTRACK_URL and YOUTRACK_TOKEN environment variables.
 allowed-tools:
-  - Bash(bash:*)
+  - Bash
   - Read
   - AskUserQuestion
 ---
@@ -16,7 +16,7 @@ allowed-tools:
 # YouTrack REST API
 
 ## Setup (minimal)
-- ALWAYS wrap commands in `bash -c`.
+- NEVER use pipes after curl commands to parse the output, do that in a separate tool call.
 - Always pass the auth header via `"${YOUTRACK_TOKEN}"`. Always include `Accept: application/json`; add `Content-Type: application/json` for write calls.
 - For queries containing spaces or symbols, use `curl -G --data-urlencode "query=..."` instead of embedding the query string.
 - Request only needed fields via the `fields` parameter; default minimal issue fields: `idReadable,summary`.
