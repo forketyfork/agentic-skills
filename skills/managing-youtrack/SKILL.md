@@ -15,66 +15,20 @@ allowed-tools:
 
 # YouTrack REST API
 
-Interact with YouTrack via its REST API using `curl`.
+## Setup (minimal)
+- Env vars: `YOUTRACK_URL`, `YOUTRACK_TOKEN`.
+- Always include `Authorization: Bearer $YOUTRACK_TOKEN` and `Accept: application/json`; add `Content-Type: application/json` for write calls.
+- For queries containing spaces or symbols, use `curl -G --data-urlencode "query=..."` instead of embedding the query string.
+- Request only needed fields via the `fields` parameter; default minimal issue fields: `idReadable,summary`.
 
-## Setup
+## Navigation
+- Issues, drafts, comments → [reference/issues.md](reference/issues.md)
+- Tags, links, work items → [reference/metadata.md](reference/metadata.md)
+- Fields, saved searches, users, groups → [reference/admin.md](reference/admin.md)
+- Field presets and `$type` values → [reference/fields.md](reference/fields.md)
 
-All requests use `curl` with Bearer token auth and `Accept: application/json`. POST requests additionally need `Content-Type: application/json`. Always request specific fields via the `fields` query parameter — without it, the API returns only entity IDs.
-
-Examples below use shorthand for brevity — expand to full `curl` with the headers above when executing:
-
-- `yt_get "path"` → `curl -s -H "Authorization: Bearer $YOUTRACK_TOKEN" -H "Accept: application/json" "$YOUTRACK_URL/api/path"`
-- `yt_post "path" '{...}'` → same with `-X POST -H "Content-Type: application/json" -d '{...}'`
-- `yt_delete "path"` → same with `-X DELETE`
-
-**URL encoding**: For GET requests with query parameters that may contain special characters (`:`, `#`, spaces, etc.), use curl's `-G` flag with `--data-urlencode` instead of embedding values directly in the URL. This applies especially to the `query` parameter in issue searches. Example:
-
-```bash
-yt_get "issues?fields=idReadable,summary" -G --data-urlencode "query=for: me #Unresolved"
-```
-
-## API Reference
-
-- **Issues, drafts & comments**: See [reference/issues.md](reference/issues.md)
-- **Tags, links & time tracking**: See [reference/metadata.md](reference/metadata.md)
-- **Field schema, saved queries, users, groups & projects**: See [reference/admin.md](reference/admin.md)
-
-## Field quick reference
-
-### Common fields parameter values
-
-| Entity | Fields |
-|---|---|
-| Minimal issue | `idReadable,summary` |
-| Standard issue | `idReadable,summary,description,reporter(login,name),created,updated,resolved,customFields(name,value(name)),tags(name)` |
-| Issue with comments | add `comments(id,text,author(login,name),created)` |
-| Issue with links | add `links(id,direction,linkType(name),issues(idReadable,summary))` |
-| Comment | `id,text,author(login,name),created,updated` |
-| Work item | `id,author(login,name),text,type(name),duration(minutes,presentation),date,created` |
-| Tag | `id,name` |
-| User | `id,login,fullName,email` |
-| Group | `id,name,usersCount` |
-
-### Custom field $type values
-
-| Field type | $type |
-|---|---|
-| Single enum (Priority, Type) | `SingleEnumIssueCustomField` |
-| Multi enum | `MultiEnumIssueCustomField` |
-| Single user (Assignee) | `SingleUserIssueCustomField` |
-| Multi user | `MultiUserIssueCustomField` |
-| State | `StateIssueCustomField` |
-| Date | `DateIssueCustomField` |
-| Period | `PeriodIssueCustomField` |
-| Text | `TextIssueCustomField` |
-| Simple (string/int/float) | `SimpleIssueCustomField` |
-
-For user fields, use `{"login": "username"}`. For enum/state fields, use `{"name": "Value Name"}`.
-
-## Output requirements
-
-After any create, update, or delete operation, always output a clickable link to the affected item:
-
-- **Issue**: `$YOUTRACK_URL/issue/<idReadable>` (e.g. `$YOUTRACK_URL/issue/PROJ-123`)
-- **Comment**: `$YOUTRACK_URL/issue/<idReadable>#focus=Comments-<COMMENT_ID>`
-- **Draft**: drafts are only accessible via the API and have no web URL
+## Output requirement
+After create/update/delete, print a link to the affected item:
+- Issue: `$YOUTRACK_URL/issue/<idReadable>`
+- Comment: `$YOUTRACK_URL/issue/<idReadable>#focus=Comments-<COMMENT_ID>`
+- Drafts have no web URL.
