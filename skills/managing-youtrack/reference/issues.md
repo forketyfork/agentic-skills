@@ -14,10 +14,10 @@
 ## Issues: Search/List
 
 ```bash
-yt_get "issues?fields=idReadable,summary,description,reporter(login,name),created,resolved,customFields(name,value(name))&query=<QUERY>&\$top=<N>&\$skip=<N>"
+yt_get "issues?fields=idReadable,summary,description,reporter(login,name),created,resolved,customFields(name,value(name))&\$top=<N>&\$skip=<N>" -G --data-urlencode "query=<QUERY>"
 ```
 
-- `query` — YouTrack search query (e.g. `project: PROJ State: Open`, `for: me`, `#unresolved`)
+- `query` — YouTrack search query (e.g. `project: PROJ State: Open`, `for: me`, `#unresolved`). Always pass via `--data-urlencode` to handle special characters.
 - `$top` — max results (default varies, typically 42)
 - `$skip` — offset for pagination
 
