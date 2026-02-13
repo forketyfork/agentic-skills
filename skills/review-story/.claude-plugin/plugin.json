@@ -1,0 +1,6 @@
+{
+  "name": "review-story",
+  "description": "Generate a narrative story of a PR's changes with embedded code snippets.",
+  "version": "1.0.0",
+  "license": "Apache-2.0"
+}

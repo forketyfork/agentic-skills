@@ -4,18 +4,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A collection of Claude Code skills (plugins) for structured development workflows. Each skill lives in `skills/<skill-name>/SKILL.md` and follows the Claude Code skill format with YAML frontmatter (`name`, `description`, `license`) followed by the skill prompt in Markdown.
+A plugin marketplace for Claude Code, distributing skills for structured development workflows. Each plugin lives in `skills/<plugin-name>/` with a `.claude-plugin/plugin.json` manifest and skills in `skills/<skill-name>/SKILL.md`.
 
 ## Repository Structure
 
 ```
+.claude-plugin/
+  marketplace.json          # Marketplace catalog
 skills/
-  <skill-name>/
-    SKILL.md          # Skill definition (frontmatter + prompt)
-    LICENSE.txt        # License file (if applicable)
+  <plugin-name>/
+    .claude-plugin/
+      plugin.json           # Plugin manifest (name, description, version)
+    skills/
+      <skill-name>/
+        SKILL.md            # Skill definition (frontmatter + prompt)
+        reference/           # Supporting files (if applicable)
 ```
 
-## Current Skills
+## Current Plugins
 
 - **airtight-plans** — Generates structured multi-step implementation plans with Status Quo, Objectives, Tech Notes, and Acceptance Criteria sections per step.
 - **review-story** — Generates narrative PR walkthroughs with `story-diff` code blocks and line references. Uses `gh` CLI to gather PR data.
@@ -23,15 +29,15 @@ skills/
 
 ## Writing Skills
 
-Skills are defined as a single `SKILL.md` file with:
-1. YAML frontmatter between `---` delimiters containing `name`, `description`, and optionally `license`
-2. Markdown body with the skill's instructions/prompt
+Each plugin contains:
+1. `.claude-plugin/plugin.json` — manifest with `name`, `description`, `version`, and optionally `license`
+2. `skills/<skill-name>/SKILL.md` — YAML frontmatter (`name`, `description`) followed by the skill prompt in Markdown
 
-The `description` field in frontmatter determines when the skill activates. Refer to `~/.claude/skills/best-practices.md` for authoring guidelines.
+The `description` field in SKILL.md frontmatter determines when the skill activates. Refer to `~/.claude/skills/best-practices.md` for authoring guidelines.
 
 ## Installation (for testing)
 
 ```
 /plugin marketplace add forketyfork/agentic-skills
-/plugin install <skill-name>@agentic-skills
+/plugin install <plugin-name>@agentic-skills
 ```

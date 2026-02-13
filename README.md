@@ -1,8 +1,8 @@
 # Agentic Skills
 
-A collection of Claude Code skills for structured development workflows.
+A collection of Claude Code plugins for structured development workflows.
 
-## Skills
+## Plugins
 
 ### airtight-plans
 
@@ -35,4 +35,4 @@ In Claude Code:
 
 ## License
 
-Apache 2.0 - see [LICENSE.txt](skills/airtight-plans/LICENSE.txt)
+Apache 2.0
