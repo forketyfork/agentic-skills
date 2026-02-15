@@ -27,7 +27,7 @@
 State and enum bundles are project-specific. Before updating a State or enum field, fetch the allowed values:
 
 ```
-yt_get "admin/projects/<SHORT_NAME>/customFields?fields=field(name),bundle(values(name))"
+yt_get "admin/projects/<PROJECT_DB_ID>/customFields?fields=field(name),bundle(values(name))"
 ```
 
 ## Value shapes
