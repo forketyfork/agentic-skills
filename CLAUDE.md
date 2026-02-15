@@ -35,6 +35,14 @@ Each plugin contains:
 
 The `description` field in SKILL.md frontmatter determines when the skill activates. Refer to `~/.claude/skills/best-practices.md` for authoring guidelines.
 
+## Versioning
+
+When changing a plugin, bump its version in **both** places:
+1. `skills/<plugin-name>/.claude-plugin/plugin.json` — the `version` field
+2. `.claude-plugin/marketplace.json` — the matching entry in the `plugins` array
+
+Use semver: patch for fixes, minor for new features, major for breaking changes.
+
 ## Installation (for testing)
 
 ```

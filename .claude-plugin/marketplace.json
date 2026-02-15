@@ -24,7 +24,7 @@
       "name": "managing-youtrack",
       "description": "Interact with YouTrack issue tracker via REST API. Create, read, update, and search issues and drafts; manage comments, tags, and issue links; log work items; inspect custom field schemas; list saved queries; look up users and groups.",
       "source": "./skills/managing-youtrack",
-      "version": "1.3.0"
+      "version": "1.4.0"
     }
   ]
 }
