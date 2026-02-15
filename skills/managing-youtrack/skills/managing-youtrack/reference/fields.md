@@ -22,6 +22,14 @@
 - Text: `TextIssueCustomField`
 - Simple string/int/float: `SimpleIssueCustomField`
 
+## Fetching allowed values for a project field
+
+State and enum bundles are project-specific. Before updating a State or enum field, fetch the allowed values:
+
+```
+yt_get "admin/projects/<SHORT_NAME>/customFields?fields=field(name),bundle(values(name))"
+```
+
 ## Value shapes
 - User fields: `{"login": "username"}`
 - Enum/state fields: `{"name": "Value Name"}`
