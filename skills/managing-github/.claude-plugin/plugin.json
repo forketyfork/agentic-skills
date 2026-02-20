@@ -1,0 +1,6 @@
+{
+  "name": "managing-github",
+  "description": "Interact with GitHub via the gh CLI.",
+  "version": "1.0.0",
+  "license": "Apache-2.0"
+}

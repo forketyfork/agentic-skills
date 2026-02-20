@@ -22,6 +22,12 @@ Interacts with YouTrack issue tracker via REST API. Create, read, update, and se
 
 Activates when you ask Claude about YouTrack issues, want to file bugs, update tickets, add comments, manage tags or links, track time, or search for issues. Requires `YOUTRACK_URL` and `YOUTRACK_TOKEN` environment variables.
 
+### managing-github
+
+Interacts with GitHub via the `gh` CLI. Create issues and PRs, inspect review comments and threads, post replies, and run repository setup operations.
+
+Activates when you ask Claude to work with GitHub repositories, issues, PRs, or review comments.
+
 ## Installation
 
 In Claude Code:
@@ -31,6 +37,7 @@ In Claude Code:
 /plugin install airtight-plans@agentic-skills
 /plugin install review-story@agentic-skills
 /plugin install managing-youtrack@agentic-skills
+/plugin install managing-github@agentic-skills
 ```
 
 ## License
