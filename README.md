@@ -24,7 +24,7 @@ Activates when you ask Claude about YouTrack issues, want to file bugs, update t
 
 ### managing-github
 
-Interacts with GitHub via the `gh` CLI. Create issues and PRs, inspect review comments and threads, post replies, and run repository setup operations.
+Interacts with GitHub via the gh CLI: create issues, PRs, fetch review threads, post comments, and search.
 
 Activates when you ask Claude to work with GitHub repositories, issues, PRs, or review comments.
 
