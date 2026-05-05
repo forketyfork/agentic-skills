@@ -229,3 +229,52 @@ gh api repos/<org>/<repo>/pulls/<pr>/comments \
   --field in_reply_to=<comment_id> \
   --field body=@.tmp/reply.txt
 ```
+
+## Posting a pending review with inline comments
+
+The default for any agent-posted review is **pending** — a draft visible only to the review author until they submit it manually from the GitHub UI. Never use `event: COMMENT | APPROVE | REQUEST_CHANGES` on the user's behalf without explicit authorization; those values publish the review immediately. Omitting `event` is what keeps the review pending.
+
+Get the full PR head SHA. Abbreviated SHAs are rejected as `"invalid GitObjectID"`:
+
+```bash
+gh api repos/<org>/<repo>/pulls/<pr> --jq '.head.sha'
+```
+
+Identify valid lines for inline comments. A comment must anchor to a line inside a diff hunk on the new side (`RIGHT`); lines in unchanged context between hunks are rejected with `"Line could not be resolved"`. Each hunk header has the form `@@ -X[,Y] +A[,B] @@`; when a count (`,Y` or `,B`) is omitted, treat it as `1`. Valid new-side lines are `A` through `A + (B-1)` inclusive:
+
+- `@@ -10,3 +12,5 @@` → new-side lines 12 through 16
+- `@@ -10 +12 @@` → new-side line 12 only (single-line hunk)
+- `@@ -10,3 +12 @@` → new-side line 12 only
+
+Get each file's patch via:
+
+```bash
+gh api repos/<org>/<repo>/pulls/<pr>/files --paginate
+```
+
+Build the payload. Write it to a body file to avoid shell-expansion issues with backticks or special characters in the comment text:
+
+```json
+{
+  "commit_id": "<full sha>",
+  "body": "<top-level summary>",
+  "comments": [
+    { "path": "<file>", "line": 42, "side": "RIGHT", "body": "<inline comment>" }
+  ]
+}
+```
+
+POST the payload:
+
+```bash
+gh api -X POST repos/<org>/<repo>/pulls/<pr>/reviews \
+  --input .tmp/review-$RANDOM.json
+```
+
+Verify the response includes `"state": "PENDING"`. Report the review ID to the user; the draft is visible only to them and does not notify the PR author. They submit it from the GitHub UI (*Files changed* → *Finish your review*).
+
+Discard a pending review:
+
+```bash
+gh api -X DELETE repos/<org>/<repo>/pulls/<pr>/reviews/<review-id>
+```
