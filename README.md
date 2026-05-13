@@ -28,6 +28,12 @@ Interacts with GitHub via the gh CLI: create issues, PRs, fetch review threads, 
 
 Activates when you ask Claude to work with GitHub repositories, issues, PRs, or review comments.
 
+### walkthrough
+
+Authors inline code walkthroughs in IntelliJ IDEA via the [walkthrough-plugin](https://plugins.jetbrains.com/plugin/31637-walkthrough/) MCP tools (`show_walkthrough_items`, `await_walkthrough_question`, `insert_walkthrough_tangents`). Covers the show/await/insert protocol, item format, line-number verification, and tangent answering.
+
+Activates when you ask Claude for a guided tour, walkthrough, explainer, or step-by-step code tour anchored to specific files and lines. Requires the walkthrough-plugin installed in IntelliJ and its `idea` MCP server reachable from Claude Code.
+
 ## Installation
 
 In Claude Code:
@@ -38,6 +44,7 @@ In Claude Code:
 /plugin install review-story@agentic-skills
 /plugin install managing-youtrack@agentic-skills
 /plugin install managing-github@agentic-skills
+/plugin install walkthrough@agentic-skills
 ```
 
 ## License
