@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Claude Code skills by Forketyfork",
-    "version": "1.4.0"
+    "version": "1.5.0"
   },
   "plugins": [
     {
@@ -31,6 +31,12 @@
       "description": "Interact with GitHub via the gh CLI: create issues, PRs, fetch review threads, post comments, post pending reviews with inline comments, and search.",
       "source": "./skills/managing-github",
       "version": "1.1.0"
+    },
+    {
+      "name": "walkthrough",
+      "description": "Author inline code walkthroughs in IntelliJ IDEA via the walkthrough-plugin MCP tools. Covers the show/await/insert protocol, item format, line-number verification, and tangent answering.",
+      "source": "./skills/walkthrough",
+      "version": "0.1.0"
     }
   ]
 }
