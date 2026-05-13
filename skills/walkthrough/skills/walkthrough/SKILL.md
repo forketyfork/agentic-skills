@@ -17,6 +17,8 @@ All tools live on the `idea` MCP server. Fully qualified names:
 - `mcp__idea__await_walkthrough_question` — blocks until the user asks a question or dismisses
 - `mcp__idea__insert_walkthrough_tangents` — splices answer steps as children of a step
 
+If these tools are not available, do not pretend to create an inline walkthrough. Tell the user that the IntelliJ walkthrough plugin and its `idea` MCP server are required, then offer a normal text walkthrough only if they want one.
+
 ## Required protocol
 
 ```
@@ -30,9 +32,11 @@ loop:
 
 **You must enter the await loop immediately after `show_walkthrough_items` returns.** Do not summarize, do not stop, do not call other tools first. The popup's question UI depends on you waiting. Keep looping until `await_walkthrough_question` returns the literal string `dismissed`.
 
+If a walkthrough tool returns an error such as `No active project`, `No active editor`, or `Unknown walkthroughId`, tell the user what failed and stop the loop. Do not retry blindly.
+
 ## Item format
 
-Each item is a JSON object:
+The plugin parses `items` with Gson as a JSON array string. Each object has this runtime shape:
 
 ```json
 { "text": "...markdown...", "file": "src/Foo.kt", "line": 42 }
@@ -44,16 +48,26 @@ Each item is a JSON object:
 
 Items without `file`/`line` render the popup without navigating.
 
-The `items` parameter is a JSON **string** containing an array — pass `"[{...},{...}]"`, not a list.
+The `items` parameter is a JSON **string** containing an array. Build a JSON array, then stringify it exactly once for the tool argument:
+
+```json
+{
+  "description": "Auth middleware request flow",
+  "items": "[{\"text\":\"This middleware validates the bearer token before routing continues.\",\"file\":\"src/AuthMiddleware.kt\",\"line\":42},{\"text\":\"This step is conceptual and does not navigate.\"}]"
+}
+```
+
+Do not include `label` or `parentLabel` in item objects. The plugin ignores input labels for top-level items and assigns child labels from the `parentLabel` tool argument.
 
 ## Verifying line numbers (mandatory)
 
-Line numbers must be correct — the connector visibly points at that line. **Read the file with the Read tool before calling `show_walkthrough_items` or `insert_walkthrough_tangents`.** Never estimate from a diff, commit, memory, or LSP output. Files drift; verify in the current working tree.
+Line numbers must be correct — the connector visibly points at that line. **Read the file before calling `show_walkthrough_items` or `insert_walkthrough_tangents`.** Never estimate from a diff, commit, memory, or LSP output. Files drift; verify in the current working tree.
 
 For each item with a `line`:
 1. Read the file
 2. Confirm the line number matches the symbol/expression the step describes
-3. If you got the line from `grep`/`rg` output, the printed line number is the authoritative anchor
+3. Use `rg -n` to find candidate anchors when available; if `rg` is unavailable, use `grep -n`
+4. Treat search output as a candidate only; re-read the current file before using the line number
 
 ## Labels
 
@@ -126,37 +140,36 @@ If the question is unanswerable (out of scope, hallucinated premise), still resp
 
 User: "Walk me through how the MCP toolset shows a walkthrough."
 
-After reading `ShowWalkthroughItemsToolset.kt` and `WalkthroughOrchestrator.kt` to verify line numbers:
+After reading the current files and verifying the line numbers. The numeric lines below show the JSON shape; replace them with the lines you just verified in the target checkout.
 
-```
-mcp__idea__show_walkthrough_items(
-  description = "How show_walkthrough_items wires an MCP call to the editor popup",
-  items = "[
-    {\"text\":\"The MCP framework invokes `showWalkthroughItems` by reflection — it's a `suspend` method annotated `@McpTool`.\",\"file\":\"src/main/kotlin/com/forketyfork/walkthrough/ShowWalkthroughItemsToolset.kt\",\"line\":34},
-    {\"text\":\"The active project comes from the coroutine context, not a parameter.\",\"file\":\"src/main/kotlin/com/forketyfork/walkthrough/ShowWalkthroughItemsToolset.kt\",\"line\":139},
-    {\"text\":\"UI work hops to the EDT via `withContext(Dispatchers.EDT)` before touching the editor.\",\"file\":\"src/main/kotlin/com/forketyfork/walkthrough/ShowWalkthroughItemsToolset.kt\",\"line\":56},
-    {\"text\":\"`showWalkthroughSession` is the actual entry point: it resolves the anchor, creates the Compose popup, and registers a session in `WalkthroughSessionRegistry`.\",\"file\":\"src/main/kotlin/com/forketyfork/walkthrough/WalkthroughOrchestrator.kt\",\"line\":36}
-  ]"
-)
-→ walkthroughId=abc123
+```json
+{
+  "description": "How show_walkthrough_items wires an MCP call to the editor popup",
+  "items": "[{\"text\":\"The MCP framework invokes `showWalkthroughItems` by reflection from an `@McpTool` method.\",\"file\":\"src/main/kotlin/com/forketyfork/walkthrough/ShowWalkthroughItemsToolset.kt\",\"line\":22},{\"text\":\"The active project comes from the coroutine context, not from a tool parameter.\",\"file\":\"src/main/kotlin/com/forketyfork/walkthrough/ShowWalkthroughItemsToolset.kt\",\"line\":139},{\"text\":\"UI work runs on the EDT before the tool touches the editor and popup state.\",\"file\":\"src/main/kotlin/com/forketyfork/walkthrough/ShowWalkthroughItemsToolset.kt\",\"line\":56},{\"text\":\"`showWalkthroughSession` resolves the first anchor before creating the popup session and handing the items to the UI.\",\"file\":\"src/main/kotlin/com/forketyfork/walkthrough/WalkthroughOrchestrator.kt\",\"line\":30}]"
+}
 ```
 
 Then immediately:
 
-```
-mcp__idea__await_walkthrough_question(walkthroughId = "abc123")
-→ parentLabel=3
-  question=What happens if there's no active editor?
+```json
+{ "walkthroughId": "abc123" }
 ```
 
-Build the tangent answer (after re-reading the relevant code), then:
+If it returns:
 
 ```
-mcp__idea__insert_walkthrough_tangents(
-  walkthroughId = "abc123",
-  parentLabel = "3",
-  items = "[{\"text\":\"`showWalkthroughSession` returns null, and the toolset calls `mcpFail(\\\"No active editor\\\")`, which surfaces as an error response to the MCP client.\",\"file\":\"src/main/kotlin/com/forketyfork/walkthrough/ShowWalkthroughItemsToolset.kt\",\"line\":58}]"
-)
+parentLabel=3
+question=What happens if there's no active editor?
+```
+
+Build the tangent answer after re-reading the relevant code, then call `insert_walkthrough_tangents` with:
+
+```json
+{
+  "walkthroughId": "abc123",
+  "parentLabel": "3",
+  "items": "[{\"text\":\"If no active editor is available, `showWalkthroughSession` returns null and the tool reports `No active editor` to the MCP client.\",\"file\":\"src/main/kotlin/com/forketyfork/walkthrough/ShowWalkthroughItemsToolset.kt\",\"line\":58}]"
+}
 ```
 
 Loop back to `await_walkthrough_question`. Continue until it returns `dismissed`.
