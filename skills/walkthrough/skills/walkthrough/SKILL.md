@@ -1,6 +1,6 @@
 ---
 name: walkthrough
-description: Authors inline code walkthroughs in IntelliJ IDEA via the walkthrough-plugin MCP tools (show_walkthrough_items, show_diff_walkthrough_items, await_walkthrough_question, insert_walkthrough_tangents). Use when the user asks for a guided tour, walkthrough, explainer, code tour, PR/commit/branch review, or "what changed" anchored to specific files and lines (or diff sides and lines), and the `idea` MCP server is available.
+description: Authors inline code and diff walkthroughs in IntelliJ IDEA via the walkthrough-plugin MCP tools (show_walkthrough_items, show_diff_walkthrough_items, await_walkthrough_question, insert_walkthrough_tangents). Use when the user asks for a guided tour, walkthrough, explainer, code tour, PR/commit/branch review, or "what changed" anchored to specific files and lines (or diff sides and lines), and the `idea` MCP server is available.
 ---
 
 # Authoring walkthroughs
@@ -118,7 +118,7 @@ Do not include `label` or `parentLabel` in item objects. The plugin ignores inpu
 
 - `text` (required) — same markdown rules as file items.
 - `diffId` (required) — must match a descriptor's `id`.
-- `diffFile` (required) — path that matches the descriptor's side; for renames pass the side-specific path that matches `diffSide`.
+- `diffFile` (optional but recommended) — item path. If omitted, the parser falls back to the descriptor's `file`, then `rightFile`, then `leftFile`. For renames, include the side-specific path matching `diffSide`.
 - `diffSide` (required) — `"left"` or `"right"`.
 - `line` (required) — 1-based line in the chosen side's **full file text at that commit**, not a patch hunk line.
 
@@ -259,7 +259,7 @@ After reading the current files and verifying the line numbers:
 ```json
 {
   "description": "How show_walkthrough_items wires an MCP call to the editor popup",
-  "items": "[{\"text\":\"The MCP framework invokes `showWalkthroughItems` by reflection from an `@McpTool` method.\",\"file\":\"src/main/kotlin/com/forketyfork/walkthrough/ShowWalkthroughItemsToolset.kt\",\"line\":22},{\"text\":\"The active project comes from the coroutine context, not from a tool parameter.\",\"file\":\"src/main/kotlin/com/forketyfork/walkthrough/ShowWalkthroughItemsToolset.kt\",\"line\":139},{\"text\":\"UI work runs on the EDT before the tool touches the editor and popup state.\",\"file\":\"src/main/kotlin/com/forketyfork/walkthrough/ShowWalkthroughItemsToolset.kt\",\"line\":56},{\"text\":\"`showWalkthroughSession` resolves the first anchor before creating the popup session and handing the items to the UI.\",\"file\":\"src/main/kotlin/com/forketyfork/walkthrough/WalkthroughOrchestrator.kt\",\"line\":30}]"
+  "items": "[{\"text\":\"The MCP framework invokes `showWalkthroughItems` by reflection from an `@McpTool` method.\",\"file\":\"src/main/kotlin/com/forketyfork/walkthrough/ShowWalkthroughItemsToolset.kt\",\"line\":43},{\"text\":\"The active project comes from the coroutine context, not from a tool parameter.\",\"file\":\"src/main/kotlin/com/forketyfork/walkthrough/ShowWalkthroughItemsToolset.kt\",\"line\":226},{\"text\":\"UI work runs on the EDT before the tool touches the editor and popup state.\",\"file\":\"src/main/kotlin/com/forketyfork/walkthrough/ShowWalkthroughItemsToolset.kt\",\"line\":80},{\"text\":\"`showWalkthroughSession` resolves the first anchor before creating the popup session and handing the items to the UI.\",\"file\":\"src/main/kotlin/com/forketyfork/walkthrough/WalkthroughOrchestrator.kt\",\"line\":31}]"
 }
 ```
 
@@ -278,7 +278,7 @@ Build the tangent answer after re-reading the relevant code, then call `insert_w
 {
   "walkthroughId": "abc123",
   "parentLabel": "3",
-  "items": "[{\"text\":\"If no active editor is available, `showWalkthroughSession` returns null and the tool reports `No active editor` to the MCP client.\",\"file\":\"src/main/kotlin/com/forketyfork/walkthrough/ShowWalkthroughItemsToolset.kt\",\"line\":58}]"
+  "items": "[{\"text\":\"If no active editor is available, `showWalkthroughSession` returns null and the tool reports `No active editor` to the MCP client.\",\"file\":\"src/main/kotlin/com/forketyfork/walkthrough/ShowWalkthroughItemsToolset.kt\",\"line\":82}]"
 }
 ```
 

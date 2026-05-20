@@ -34,9 +34,9 @@
     },
     {
       "name": "walkthrough",
-      "description": "Author inline code walkthroughs in IntelliJ IDEA via the walkthrough-plugin MCP tools. Covers the show/await/insert protocol, item format, line-number verification, and tangent answering.",
+      "description": "Author inline code and diff walkthroughs in IntelliJ IDEA via the walkthrough-plugin MCP tools. Covers the show/await/insert protocol, file and diff item formats, line-number verification, and tangent answering.",
       "source": "./skills/walkthrough",
-      "version": "0.1.0"
+      "version": "0.1.1"
     }
   ]
 }
