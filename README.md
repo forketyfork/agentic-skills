@@ -30,9 +30,9 @@ Activates when you ask Claude to work with GitHub repositories, issues, PRs, or 
 
 ### walkthrough
 
-Authors inline code walkthroughs in IntelliJ IDEA via the [walkthrough-plugin](https://plugins.jetbrains.com/plugin/31637-walkthrough/) MCP tools (`show_walkthrough_items`, `await_walkthrough_question`, `insert_walkthrough_tangents`). Covers the show/await/insert protocol, item format, line-number verification, and tangent answering.
+Authors inline code and diff walkthroughs in IntelliJ IDEA via the [walkthrough-plugin](https://plugins.jetbrains.com/plugin/31637-walkthrough/) MCP tools (`show_walkthrough_items`, `show_diff_walkthrough_items`, `await_walkthrough_question`, `insert_walkthrough_tangents`). Covers the show/await/insert protocol, file and diff item formats, line-number verification, and tangent answering.
 
-Activates when you ask Claude for a guided tour, walkthrough, explainer, or step-by-step code tour anchored to specific files and lines. Requires the walkthrough-plugin installed in IntelliJ and its `idea` MCP server reachable from Claude Code.
+Activates when you ask Claude for a guided tour, walkthrough, explainer, code tour, PR/commit/branch review, or "what changed" view anchored to specific files and lines or diff sides. Requires the walkthrough-plugin installed in IntelliJ and its `idea` MCP server reachable from Claude Code.
 
 ## Installation
 
