@@ -1,6 +1,6 @@
 ---
 name: walkthrough
-description: Authors inline code and diff walkthroughs in IntelliJ IDEA via the walkthrough-plugin MCP tools (show_walkthrough_items, show_diff_walkthrough_items, await_walkthrough_question, insert_walkthrough_tangents). Use when the user asks for a guided tour, walkthrough, explainer, code tour, PR/commit/branch review, or "what changed" anchored to specific files and lines (or diff sides and lines), and the `idea` MCP server is available.
+description: Authors and revises inline code and diff walkthroughs in IntelliJ IDEA via the walkthrough-plugin MCP tools (show_walkthrough_items, show_diff_walkthrough_items, await_walkthrough_question, insert_walkthrough_tangents). Use when the user asks for a guided tour, walkthrough, explainer, code tour, presentation revision, PR/commit/branch review, or "what changed" anchored to specific files and lines (or diff sides and lines), and the `idea` MCP server is available.
 ---
 
 # Authoring walkthroughs
@@ -13,8 +13,8 @@ The MCP tools form one stateful protocol. Skipping the question-loop leaves the 
 
 All tools live on the `idea` MCP server. Fully qualified names:
 
-- `mcp__idea__show_walkthrough_items` — create a **file** walkthrough, returns a `walkthroughId`
-- `mcp__idea__show_diff_walkthrough_items` — create a **diff** walkthrough, returns a `walkthroughId`
+- `mcp__idea__show_walkthrough_items` — show a **file** walkthrough; create or replace its saved history entry
+- `mcp__idea__show_diff_walkthrough_items` — show a **diff** walkthrough; create or replace its saved history entry
 - `mcp__idea__await_walkthrough_question` — blocks until the user asks a question or dismisses
 - `mcp__idea__insert_walkthrough_tangents` — splices answer steps as children of a step
 
@@ -41,13 +41,18 @@ If the user asks both to review changes and explain surrounding architecture, st
 ## Required protocol
 
 ```
-show_walkthrough_items(description, items)              → walkthroughId   # file mode
+show_walkthrough_items(description, items, historyId?)        # file mode
   OR
-show_diff_walkthrough_items(description, payload)       → walkthroughId   # diff mode
+show_diff_walkthrough_items(description, payload, historyId?) # diff mode
+
+remember walkthroughId and the saved history ID from the response
 
 loop:
   await_walkthrough_question(walkthroughId)             → "dismissed" | (parentLabel, question)
   if dismissed: stop
+  if the user requests a presentation revision:
+    show the full revision using the saved-presentation rules below
+    continue with the new walkthroughId
   answer = build items addressing the question
   insert_walkthrough_tangents(walkthroughId, parentLabel, answer)
 ```
@@ -55,6 +60,39 @@ loop:
 **You must enter the await loop immediately after the show tool returns.** Do not summarize, do not stop, do not call other tools first. The popup's question UI depends on you waiting. Keep looping until `await_walkthrough_question` returns the literal string `dismissed`.
 
 If a walkthrough tool returns an error such as `No active project`, `No active editor`, `No diff walkthrough items to show`, or `Unknown walkthroughId`, tell the user what failed and stop the loop. Do not retry blindly.
+
+## Saved presentations and revisions
+
+Each show call saves a presentation in the active project's `.idea/walkthroughs/` history. Without `historyId`, it creates a new entry even if the description and steps match an existing presentation. Updating an entry in place requires Walkthrough Plugin **0.6.0 or later** and a show tool exposing the optional `historyId` parameter.
+
+Track two distinct identifiers from every successful show response:
+
+- **`walkthroughId`** identifies the live popup session. Each show call returns a new one; immediately use that new value for `await_walkthrough_question` and subsequent tangents.
+- **`historyId`** is the saved record ID following `saved to history as` in the response. Retain it with the presentation's project, description, and file/diff kind for later revisions. It stays the same when the presentation is replaced. A response saying `history was not saved` provides no reusable history ID.
+
+When the user asks to revise, shorten, reorder, or preview changes to the same presentation, **reuse its `historyId` by default**. Send the complete revised description and step list with the matching show tool; for diff mode, also send the complete revised diff descriptors. This replaces the saved content, preserving its history ID and original creation time. Include any content the user wants retained: the call replaces the presentation rather than applying a partial edit. It is a saved revision, not an unsaved preview.
+
+For a new walkthrough, or when the user asks to keep the original and make a separate copy, omit `historyId`. Retain the new history ID for subsequent revisions to that copy. Answer ordinary popup questions through `insert_walkthrough_tangents`; showing a replacement presentation is for revisions to the presentation itself.
+
+If the history ID is missing from conversation context, recover it from prior tool responses or identify the corresponding record in the active project's `.idea/walkthroughs/` by its description and contents. If the presentation cannot be identified unambiguously, ask which saved presentation the user means. Manage IDs yourself; do not ask the user to supply an API parameter or choose a record merely because it has the newest timestamp.
+
+If an update reports an unknown history ID, a file/diff kind mismatch, or a save failure, explain the failure and stop that update. Do not retry without `historyId`, which would create the unwanted extra entry. If the installed tool lacks this parameter, explain that updating in place requires upgrading the IDE plugin and refreshing the client's MCP tools.
+
+### Revision example
+
+User: "Shorten the introduction and show me the updated walkthrough without adding another history entry."
+
+Suppose the first draft returned `walkthroughId=session-a` and `saved to history as 20260907-120000-000-api-tour-1234abcd`. After revising the full presentation, call `show_walkthrough_items` with:
+
+```json
+{
+  "description": "API tour",
+  "historyId": "20260907-120000-000-api-tour-1234abcd",
+  "items": "[{\"text\":\"A brief overview of the API.\"},{\"text\":\"How requests move through the service.\"}]"
+}
+```
+
+The replacement returns a new `walkthroughId`, such as `session-b`, and the same saved history ID. Immediately await questions using `session-b`. Further revisions reuse that history ID, leaving one saved presentation for the user to replay.
 
 ## File item format
 
@@ -211,7 +249,8 @@ Suggested step count for a single walkthrough: 3–8 top-level items. Longer tha
 - `dismissed` (literal string) — stop the loop.
 - a body like `parentLabel=3\nquestion=Why is this dispatched on the EDT?`
 
-To answer:
+For a request to revise the presentation itself, follow **Saved presentations and revisions**, then restart the question loop with the new `walkthroughId`. For an ordinary follow-up question:
+
 1. Investigate as you normally would (read files, search, inspect commits, run commands).
 2. Build a small `items` array — usually 1–3 child steps — addressing the question.
 3. Call `insert_walkthrough_tangents` with the **exact** `parentLabel` from the question.
@@ -232,13 +271,15 @@ If the question is unanswerable (out of scope, hallucinated premise), still resp
 [ ] 4. For diff mode: resolve commit hashes (merge base + head, parent + commit, etc.)
 [ ] 5. Verify each anchor line by reading the file (file mode) or `git show <sha>:<path>` (diff mode)
 [ ] 6. Draft the items array, one focused step per anchor
-[ ] 7. Call show_walkthrough_items or show_diff_walkthrough_items, capture walkthroughId
-[ ] 8. Enter the await_walkthrough_question loop; respond to each question; stop on dismissed
+[ ] 7. Reuse historyId for a revision; omit it for a new presentation or separate copy
+[ ] 8. Call the matching show tool; retain its new walkthroughId and saved history ID
+[ ] 9. Enter the await_walkthrough_question loop; respond to each question; stop on dismissed
 ```
 
 ## Common mistakes
 
 - **Skipping the await loop.** The user can't ask questions if you don't wait. Don't call a show tool and then end your turn.
+- **Creating a new history entry for each revision.** Reuse the saved presentation's `historyId`; the live `walkthroughId` is a separate value and changes on every show call.
 - **Mixing file and diff items in one session.** Use the matching show tool; tangents must match the parent session kind.
 - **Using a file walkthrough for "what changed".** PR / commit / branch / patch review must use `show_diff_walkthrough_items`.
 - **Submitting file contents in the diff payload.** Pass commit hashes only.
