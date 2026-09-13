@@ -99,14 +99,17 @@ The replacement returns a new `walkthroughId`, such as `session-b`, and the same
 `show_walkthrough_items` parses `items` with Gson as a JSON array string. Each object:
 
 ```json
-{ "text": "...markdown...", "file": "src/Foo.kt", "line": 42 }
+{ "text": "...markdown...", "file": "src/Foo.kt", "line": 42, "endLine": 48 }
 ```
 
 - `text` (required) — GitHub-flavored markdown. Supported: headings, fenced code with syntax highlighting, lists, tables, strikethrough, GitHub alerts (`> [!NOTE]`), autolinks, inline HTML.
 - `file` (optional) — project-relative path, forward slashes.
-- `line` (optional) — 1-based line number in the current full file; navigates the editor and anchors the connector to that line.
+- `line` (optional) — 1-based line number in the current full file; navigates the editor and anchors a line-only item to that line.
+- `endLine` (optional) — inclusive 1-based end line in the current full file. Use it only with `line` and only when it is greater than or equal to `line`. The editor draws a curly brace alongside the visible `line..endLine` range and points the connector at the brace; it does not select or modify editor text.
 
 Items without `file`/`line` render the popup without navigating.
+
+Invalid, inverted, or stale ranges fall back to the line-only or text-only behavior. Use `endLine` for file walkthroughs only; diff walkthrough items remain single-line.
 
 The `items` parameter is a JSON **string** containing an array. Build a JSON array, then stringify it exactly once for the tool argument:
 
@@ -196,13 +199,13 @@ Prefer full 40-character SHAs over refs/short hashes — they are stable for his
 
 ## Line Numbers (mandatory verification)
 
-Line numbers must be correct — the connector visibly points at that line. Never estimate from a diff, commit message, memory, or LSP output.
+Line numbers must be correct — the connector visibly points at that line for line-only items, or to the brace spanning the requested range. Never estimate from a diff, commit message, memory, or LSP output.
 
 **File walkthrough lines** are 1-based lines in the current full file in the working tree.
 
-For each file item with a `line`:
+For each file item with a `line` (and `endLine`, when present):
 1. Read the file.
-2. Confirm the line number matches the symbol/expression the step describes.
+2. Confirm the start line matches the symbol/expression the step describes. If `endLine` is present, confirm it is the intended inclusive end of the explained range.
 3. Use `rg -n` to find candidate anchors when available; if `rg` is unavailable, use `grep -n`.
 4. Treat search output as a candidate only; re-read the current file before using the line number.
 
@@ -289,7 +292,7 @@ If the question is unanswerable (out of scope, hallucinated premise), still resp
 - **Manually setting `label` or `parentLabel` on items.** The plugin assigns labels. Authors only pass `parentLabel` to `insert_walkthrough_tangents`, never inside an item.
 - **Generic descriptions.** `"Walkthrough"` or `"Diff"` is useless in history; the description is searchable metadata.
 - **Walls of text per step.** The popup is small; break content across steps anchored to the relevant lines instead.
-- **One step per line of a function.** Group related lines under one anchor; the connector only points at one line per popup.
+- **One step per line of a function.** Group related lines under one anchor; use `endLine` when the explanation covers a consecutive file range so the brace marks the whole span.
 
 ## File walkthrough example
 
