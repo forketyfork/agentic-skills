@@ -1,6 +1,6 @@
 {
   "name": "walkthrough",
   "description": "Author and revise inline code and diff walkthroughs in IntelliJ IDEA via the walkthrough-plugin MCP tools.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "license": "Apache-2.0"
 }
