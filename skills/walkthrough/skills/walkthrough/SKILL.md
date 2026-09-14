@@ -109,7 +109,7 @@ The replacement returns a new `walkthroughId`, such as `session-b`, and the same
 
 Items without `file`/`line` render the popup without navigating.
 
-Invalid, inverted, or stale ranges fall back to the line-only or text-only behavior. Use `endLine` for file walkthroughs only; diff walkthrough items remain single-line.
+Invalid, inverted, or stale ranges fall back to the line-only or text-only behavior.
 
 The `items` parameter is a JSON **string** containing an array. Build a JSON array, then stringify it exactly once for the tool argument:
 
@@ -142,7 +142,8 @@ Do not include `label` or `parentLabel` in item objects. The plugin ignores inpu
       "diffId": "foo-main-to-pr",
       "diffFile": "src/Foo.kt",
       "diffSide": "right",
-      "line": 42
+      "line": 42,
+      "endLine": 48
     }
   ]
 }
@@ -162,6 +163,7 @@ Do not include `label` or `parentLabel` in item objects. The plugin ignores inpu
 - `diffFile` (optional but recommended) — item path. If omitted, the parser falls back to the descriptor's `file`, then `rightFile`, then `leftFile`. For renames, include the side-specific path matching `diffSide`.
 - `diffSide` (required) — `"left"` or `"right"`.
 - `line` (required) — 1-based line in the chosen side's **full file text at that commit**, not a patch hunk line.
+- `endLine` (optional) — inclusive 1-based end line in the chosen side's full file text. Use it only with `line` and only when it is greater than or equal to `line`; the diff editor draws a curly brace alongside the visible `line..endLine` range without selecting or modifying text.
 
 Side rules:
 
@@ -209,10 +211,10 @@ For each file item with a `line` (and `endLine`, when present):
 3. Use `rg -n` to find candidate anchors when available; if `rg` is unavailable, use `grep -n`.
 4. Treat search output as a candidate only; re-read the current file before using the line number.
 
-**Diff walkthrough lines** are 1-based lines in the selected side's **full file text at that commit**, not patch hunk line numbers. For each diff item:
+**Diff walkthrough lines** are 1-based lines in the selected side's **full file text at that commit**, not patch hunk line numbers. For each diff item with a `line` (and `endLine`, when present):
 
 1. Inspect that exact file at that exact commit on the requested side, e.g. `git show <rightCommit>:src/Foo.kt | nl -ba` (use `<leftCommit>` and `leftFile`/`file` for `diffSide: "left"`).
-2. Confirm the line number matches the symbol/expression the step describes in that revision.
+2. Confirm the start line matches the symbol/expression the step describes. If `endLine` is present, confirm it is the intended inclusive end of the explained range.
 3. Re-verify after any rebase or force-push — line numbers move when commits change.
 
 ## Labels
@@ -292,7 +294,7 @@ If the question is unanswerable (out of scope, hallucinated premise), still resp
 - **Manually setting `label` or `parentLabel` on items.** The plugin assigns labels. Authors only pass `parentLabel` to `insert_walkthrough_tangents`, never inside an item.
 - **Generic descriptions.** `"Walkthrough"` or `"Diff"` is useless in history; the description is searchable metadata.
 - **Walls of text per step.** The popup is small; break content across steps anchored to the relevant lines instead.
-- **One step per line of a function.** Group related lines under one anchor; use `endLine` when the explanation covers a consecutive file range so the brace marks the whole span.
+- **One step per line of a function.** Group related lines under one anchor; use `endLine` when the explanation covers a consecutive file or diff range so the brace marks the whole span.
 
 ## File walkthrough example
 
