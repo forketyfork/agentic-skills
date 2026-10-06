@@ -1,0 +1,16 @@
+{
+  "name": "blind-spots",
+  "version": "0.1.0",
+  "description": "After a long turn, a reviewer pass flags above the prompt the one decision, risk, gap or concept you are likely to have missed, and learns from how you react.",
+  "author": { "name": "Forketyfork" },
+  "license": "Apache-2.0",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "minToolCalls": {
+      "type": "number",
+      "title": "Minimum tool calls",
+      "description": "The base threshold: a finished turn is reviewed only if the main agent made at least this many tool calls in it. The plugin raises it for a project while you ignore findings there. Each review re-sends the conversation to the model.",
+      "default": 8
+    }
+  }
+}

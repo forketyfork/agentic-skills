@@ -36,6 +36,12 @@ Activates when you ask Claude for a guided tour, walkthrough, explainer, code to
 
 With Walkthrough Plugin 0.6.0 or later and walkthrough skill 0.4.0 or later, you can say: "Shorten the introduction and show me the updated walkthrough without adding another history entry." The agent updates the same saved presentation as you iterate. Ask for a separate copy when you want to keep the original as well.
 
+### blind-spots
+
+After a long turn, a reviewer pass looks for the one decision, risk, gap or concept you are likely to have missed, and shows it in a banner above the prompt, with details, a way to discuss it in the main session, and a way to mute the topic. It learns from how you react: findings you ignore make it review less often in that project and raise its bar for that kind of finding. `/blind-spots` shows the last review and what it has learned, and runs a review on demand.
+
+Unlike the other plugins, this one is a hooks module (TypeScript function hooks), not a skill. See [its README](skills/blind-spots/README.md).
+
 ## Installation
 
 In Claude Code:
@@ -47,6 +53,7 @@ In Claude Code:
 /plugin install managing-youtrack@agentic-skills
 /plugin install managing-github@agentic-skills
 /plugin install walkthrough@agentic-skills
+/plugin install blind-spots@agentic-skills
 ```
 
 ## License

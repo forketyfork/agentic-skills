@@ -2,3 +2,4 @@
 .tmp/
 .envrc.local
 .idea/
+skills/*/.claude-plugin/types/
