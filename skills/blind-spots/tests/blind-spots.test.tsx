@@ -310,7 +310,8 @@ describe('back-off', () => {
     await blindSpots($, 'reset')
     release()
     gate.held = undefined
-    expect(await until($, () => false)).toBe(false)
+    // Nothing observable marks the held review's end, so give it every round trip `until` allows.
+    await until($, () => false)
 
     await blindSpots($, 'review')
     expect(prompts[2]).not.toContain('The migration test suite was skipped')
