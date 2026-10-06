@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Claude Code skills by Forketyfork",
-    "version": "1.5.0"
+    "version": "1.6.0"
   },
   "plugins": [
     {
@@ -37,6 +37,12 @@
       "description": "Author and revise inline code and diff walkthroughs in IntelliJ IDEA via the walkthrough-plugin MCP tools. Covers saved presentation revisions, the show/await/insert protocol, file and diff item formats, line-number verification, and tangent answering.",
       "source": "./skills/walkthrough",
       "version": "0.4.0"
+    },
+    {
+      "name": "blind-spots",
+      "description": "After a long turn, a reviewer pass flags above the prompt the one decision, risk or gap you are likely to have missed.",
+      "source": "./skills/blind-spots",
+      "version": "0.1.0"
     }
   ]
 }
