@@ -32,6 +32,7 @@ const lastReview = atom({ plugin: 'blind-spots', key: 'lastReview' } as const, n
 const lastAnswer = atom({ plugin: 'blind-spots', key: 'lastAnswer' } as const, null)
 
 const DEFAULT_MIN_TOOL_CALLS = 8
+const MAX_SHOWN_REPLY = 2000
 
 const KIND_COLOR: Record<FindingKind, 'yellow' | 'red' | 'magenta' | 'cyan'> = {
   decision: 'yellow',
@@ -116,14 +117,19 @@ async function review($: EngineInterface): Promise<ReviewRecord> {
 }
 
 async function conclude($: EngineInterface, reply: ModelForkResult): Promise<ReviewRecord> {
-  const at = Date.now()
   if (!reply.isAnswered) {
     const detail = reply.reason === 'api-error' ? `HTTP ${reply.status ?? 'none'}, ${reply.error}` : undefined
 
-    return { at, outcome: reply.reason, detail }
+    return { at: Date.now(), outcome: reply.reason, detail }
   }
 
-  const verdict = readVerdict(reply.text)
+  return { ...(await settleVerdict($, reply.text)), reply: reply.text }
+}
+
+async function settleVerdict($: EngineInterface, text: string): Promise<ReviewRecord> {
+  const at = Date.now()
+
+  const verdict = readVerdict(text)
   if (verdict.kind === 'clean') return { at, outcome: 'clean' }
   if (verdict.kind === 'malformed') return { at, outcome: 'malformed', detail: verdict.reason }
 
@@ -188,7 +194,12 @@ async function status($: EngineInterface, minToolCalls: number): Promise<string>
     `Reviews a turn once it ends with at least ${threshold} tool calls (base ${minToolCalls}, back-off level ${level} in this project); ${muted} topic(s) muted.`,
     summary.length === 0 ? 'No reactions recorded yet.' : `Your recent reactions: ${summary.join('; ')}.`,
     last === null ? 'No review has run in this session yet.' : `Last review: ${describe(last)}`,
+    ...(last?.reply === undefined ? [] : [`Reviewer reply:\n${cut(last.reply, MAX_SHOWN_REPLY)}`]),
   ].join('\n')
+}
+
+function cut(text: string, limit: number): string {
+  return text.length <= limit ? text : `${text.slice(0, limit)}\n… ${text.length - limit} more characters not shown.`
 }
 
 function describe(record: ReviewRecord): string {
