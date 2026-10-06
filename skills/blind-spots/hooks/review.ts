@@ -3,7 +3,7 @@ import type { FindingKind } from '../types'
 export const MAX_MUTED = 100
 export const MAX_RECENT = 10
 
-const KINDS: readonly FindingKind[] = ['decision', 'risk', 'gap', 'concept']
+export const KINDS: readonly FindingKind[] = ['decision', 'risk', 'gap', 'concept']
 
 export type Verdict =
   | { kind: 'clean' }
@@ -106,7 +106,7 @@ Nothing to raise:
 {"flag": false}
 
 Something to raise:
-{"flag": true, "kind": "decision" | "risk" | "gap", "headline": "...", "details": "...", "next_step": "..."}
+{"flag": true, "kind": ${KINDS.map(kind => `"${kind}"`).join(' | ')}, "headline": "...", "details": "...", "next_step": "..."}
 
 - headline: at most 12 words, a plain statement of the problem that makes sense without having read the conversation. Name the concrete thing (the file, endpoint, flag, test).
 - details: Markdown, at most 120 words. What happened, why it matters, and how sure you are. Define any term the user has not used themselves. Do not refer to "the second option" or similar; restate what you mean. For a concept, explain it from scratch with a small concrete example from this work.

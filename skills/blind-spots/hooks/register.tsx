@@ -95,7 +95,7 @@ async function review($: EngineInterface): Promise<ReviewRecord> {
     const muted = strings(await $.store.get('muted'))
     const summary = reactionSummary(reactions(await $.store.get('reactions')))
     const reply = await $.model.fork({ prompt: reviewPrompt(recent, muted, summary) })
-    const record = await conclude($, reply, recent, muted)
+    const record = await conclude($, reply)
     await update($, lastReview, () => record)
 
     return record
@@ -109,12 +109,7 @@ async function review($: EngineInterface): Promise<ReviewRecord> {
   }
 }
 
-async function conclude(
-  $: EngineInterface,
-  reply: ModelForkResult,
-  recent: string[],
-  muted: string[],
-): Promise<ReviewRecord> {
+async function conclude($: EngineInterface, reply: ModelForkResult): Promise<ReviewRecord> {
   const at = Date.now()
   if (!reply.isAnswered) {
     const detail = reply.reason === 'api-error' ? `HTTP ${reply.status ?? 'none'}, ${reply.error}` : undefined
@@ -126,6 +121,9 @@ async function conclude(
   if (verdict.kind === 'clean') return { at, outcome: 'clean' }
   if (verdict.kind === 'malformed') return { at, outcome: 'malformed', detail: verdict.reason }
 
+  // Read again: the user may have muted, unmuted or reset while the model was answering.
+  const recent = strings(await $.store.get('recent'))
+  const muted = strings(await $.store.get('muted'))
   const { headline } = verdict.finding
   if (mentions([...recent, ...muted], headline)) return { at, outcome: 'muted', detail: headline }
 

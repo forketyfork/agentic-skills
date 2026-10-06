@@ -3,7 +3,7 @@ import type { ModelForkResult, On } from 'claude-code'
 import type { Engine } from 'claude-code/testing'
 
 import { afterFate, effectiveLevel, fateOf, reactionSummary, withQuiet } from '../hooks/feedback'
-import { readVerdict } from '../hooks/review'
+import { KINDS, readVerdict, reviewPrompt } from '../hooks/review'
 import type { Finding } from '../types'
 
 const COMMAND = { origin: { kind: 'composer' }, presentation: { isFullscreen: false, columns: 120 } } as const
@@ -41,6 +41,8 @@ const BAND = {
 function world(on: On, replies: string[] = [], fork?: ModelForkResult) {
   const project = { root: '/projects/one' }
   const prompts: string[] = []
+  /** While `held` is set, the model call waits for it, as a slow request would. */
+  const gate: { held?: Promise<void> } = {}
   mock.store(on)
   on('session.root', async () => ({ value: project.root }))
   on('ui.render', { component: 'AbovePrompt' }, async ($, e) => {
@@ -50,12 +52,13 @@ function world(on: On, replies: string[] = [], fork?: ModelForkResult) {
   })
   on('model.fork', async (_$, e) => {
     prompts.push(e.prompt)
+    if (gate.held !== undefined) await gate.held
     const value: ModelForkResult = fork ?? { isAnswered: true, text: replies.shift() ?? '{"flag": false}', usage: USAGE }
 
     return { value }
   })
 
-  return { project, prompts }
+  return { project, prompts, gate }
 }
 
 function stepsCallTools(on: On, perStep: number) {
@@ -97,6 +100,11 @@ describe('reading the reviewer reply', () => {
     expect(readVerdict('{"flag": false}')).toEqual({ kind: 'clean' })
     expect(readVerdict('```json\n' + GAP + '\n```').kind).toBe('flagged')
     expect(readVerdict(flagged('concept', 'How the prompt cache bills reviews')).kind).toBe('flagged')
+  })
+
+  test('the output schema in the prompt offers every kind the parser accepts', () => {
+    const schema = reviewPrompt([], [], []).split('\n').find(line => line.startsWith('{"flag": true')) ?? ''
+    for (const kind of KINDS) expect(schema).toContain(`"${kind}"`)
   })
 
   test('a reply missing a field or with an unknown kind is malformed', () => {
@@ -285,6 +293,28 @@ describe('back-off', () => {
     await blindSpots($, 'review')
     expect(prompts[1]).toContain('- gap: 1 ignored')
     await ui.unmount()
+  })
+
+  test('a reset made while a review is in flight is not undone when the review lands', async ($, on) => {
+    const { prompts, gate } = world(on, [GAP, flagged('risk', 'The cache key ignores the locale')])
+    stepsCallTools(on, 3)
+
+    await blindSpots($, 'review')
+    let release = () => {}
+    gate.held = new Promise(resolve => {
+      release = resolve
+    })
+    await runTurn($, 'long', 3)
+    expect(await until($, () => prompts.length === 2)).toBe(true)
+
+    await blindSpots($, 'reset')
+    release()
+    gate.held = undefined
+    expect(await until($, () => false)).toBe(false)
+
+    await blindSpots($, 'review')
+    expect(prompts[2]).not.toContain('The migration test suite was skipped')
+    expect(prompts[2]).toContain('The cache key ignores the locale')
   })
 
   test('reset forgets what was learned', async ($, on) => {
