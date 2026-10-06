@@ -5,6 +5,8 @@
 export type FindingKind = 'decision' | 'risk' | 'gap' | 'concept'
 
 export type Finding = {
+  /** Identifies the finding a banner action was drawn for, so a stale press cannot touch a newer one. */
+  id: string
   kind: FindingKind
   headline: string
   details: string
@@ -42,6 +44,6 @@ export type ReviewRecord = {
 
 declare module 'claude-code' {
   interface PluginState {
-    'blind-spots': { finding: Finding | null; lastReview: ReviewRecord | null }
+    'blind-spots': { finding: Finding | null; lastReview: ReviewRecord | null; lastAnswer: string | null }
   }
 }

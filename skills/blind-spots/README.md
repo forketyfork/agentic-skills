@@ -60,6 +60,7 @@ Set it in the `/config` menu, or in settings under `pluginConfigs.blind-spots`.
 - A `turn.step` hook counts the main agent's tool calls in each turn. Subagent steps are not counted.
 - A `turn.complete` hook starts the review once the turn has ended normally and reached the current threshold. It does not wait for the review, so the session is free right away.
 - The review is a `$.model.fork` call: the session's own conversation is sent again with a review prompt after it, tools disabled, on the session's model and connection. That is why it works whichever way Claude Code reaches the model (direct API, a gateway, or a cloud provider). It also means each review costs a full request over the conversation, cheaper when the prompt cache still holds it.
+- A fork replays the main thread's last request, which ends before the turn's final reply. The plugin keeps each main turn's final answer and adds it to the review prompt, so the agent's closing claims and summaries are reviewed too.
 - The reviewer answers in JSON (`hooks/review.ts` has the prompt and the parser). Replies it cannot read are reported by `/blind-spots status`, never shown as findings.
 - `hooks/feedback.ts` holds the fate, back-off and summary rules as pure functions.
 - The finding being shown lives in session state. Muted and recent topics, reactions and the per-project back-off (keyed by the session's project root) live in the plugin's store, a JSON file under the Claude Code configuration directory, so they carry over to later sessions.

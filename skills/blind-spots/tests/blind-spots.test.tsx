@@ -70,14 +70,14 @@ function stepsCallTools(on: On, perStep: number) {
   on('turn.complete', async () => ({ text: 'done' }))
 }
 
-async function runTurn($: Engine, turnId: string, steps: number, agentId?: string) {
+async function runTurn($: Engine, turnId: string, steps: number, agentId?: string, answer = 'done') {
   for (let index = 0; index < steps; index += 1) {
     const stream = $.turn.step({ turnId, index, model: 'test-model', messageCount: 4, agentId })
     for await (const _chunk of stream) {
       // drained so the step completes
     }
   }
-  await $.turn.complete({ turnId, reason: 'answer', answer: 'done', durationMs: 1, isAborted: false, agentId })
+  await $.turn.complete({ turnId, reason: 'answer', answer, durationMs: 1, isAborted: false, agentId })
 }
 
 async function blindSpots($: Engine, args: string): Promise<string> {
@@ -92,7 +92,17 @@ async function until($: Engine, isDone: () => boolean): Promise<boolean> {
 }
 
 function shown(over: Partial<Finding> = {}): Finding {
-  return { kind: 'gap', headline: 'h', details: 'd', nextStep: 'n', isOpen: false, wasOpened: false, promptsUnread: 0, ...over }
+  return {
+    id: 'f1',
+    kind: 'gap',
+    headline: 'h',
+    details: 'd',
+    nextStep: 'n',
+    isOpen: false,
+    wasOpened: false,
+    promptsUnread: 0,
+    ...over,
+  }
 }
 
 describe('reading the reviewer reply', () => {
@@ -103,7 +113,7 @@ describe('reading the reviewer reply', () => {
   })
 
   test('the output schema in the prompt offers every kind the parser accepts', () => {
-    const schema = reviewPrompt([], [], []).split('\n').find(line => line.startsWith('{"flag": true')) ?? ''
+    const schema = reviewPrompt([], [], [], null).split('\n').find(line => line.startsWith('{"flag": true')) ?? ''
     for (const kind of KINDS) expect(schema).toContain(`"${kind}"`)
   })
 
@@ -168,6 +178,27 @@ describe('when a review runs', () => {
     expect(await until($, () => prompts.length === 1)).toBe(true)
   })
 
+  test("the reviewer sees the turn's final answer, which the forked request does not carry", async ($, on) => {
+    const { prompts } = world(on)
+    stepsCallTools(on, 3)
+
+    await runTurn($, 'long', 3, undefined, 'All done: I disabled the flaky upload test so CI is green.')
+    expect(await until($, () => prompts.length === 1)).toBe(true)
+    expect(prompts[0]).toContain('All done: I disabled the flaky upload test so CI is green.')
+
+    await blindSpots($, 'review')
+    expect(prompts[1]).toContain('I disabled the flaky upload test')
+  })
+
+  test('a subagent answer is not taken for the main agent final answer', async ($, on) => {
+    const { prompts } = world(on)
+    stepsCallTools(on, 3)
+
+    await runTurn($, 'sub', 3, 'agent-1', 'Subagent summary that the user never saw.')
+    await blindSpots($, 'review')
+    expect(prompts[0]).not.toContain('Subagent summary')
+  })
+
   test('the threshold is configurable', { options: { minToolCalls: 2 } }, async ($, on) => {
     const { prompts } = world(on)
     stepsCallTools(on, 1)
@@ -222,6 +253,34 @@ describe('the banner', () => {
     expect(await blindSpots($, 'review')).toContain('recent or muted topic')
     expect(prompts[1]).toContain('never raise them')
     expect(prompts[1]).toContain('The migration test suite was skipped')
+    await ui.unmount()
+  })
+
+  test('an action on a finding never dismisses a newer one that replaced it meanwhile', async ($, on) => {
+    const newer = 'The cache key ignores the locale'
+    world(on, [GAP, flagged('risk', newer)])
+    const box: { held?: Promise<void> } = {}
+    on('prompt.read', async () => {
+      if (box.held !== undefined) await box.held
+
+      return { value: { text: '', cursor: 0 } }
+    })
+    on('prompt.fill', async () => ({ isFilled: true }))
+
+    await blindSpots($, 'review')
+    const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
+    let release = () => {}
+    box.held = new Promise(resolve => {
+      release = resolve
+    })
+    const asking = ui.press({ key: 'ask' })
+
+    await blindSpots($, 'review')
+    release()
+    await asking
+
+    expect(await ui.find({ type: 'Text', text: /cache key ignores the locale/ })).toBeDefined()
+    expect(await blindSpots($, 'status')).toContain('gap: 1 ignored.')
     await ui.unmount()
   })
 

@@ -77,7 +77,18 @@ function listed(title: string, items: readonly string[]): string {
   return items.length === 0 ? '' : `\n${title}\n${items.map(item => `- ${item}`).join('\n')}\n`
 }
 
-export function reviewPrompt(recent: readonly string[], muted: readonly string[], reactions: readonly string[]): string {
+export function reviewPrompt(
+  recent: readonly string[],
+  muted: readonly string[],
+  reactions: readonly string[],
+  lastAnswer: string | null,
+): string {
+  // The forked request ends where the latest turn's last model request did, before its reply.
+  const finalAnswer =
+    lastAnswer === null
+      ? ''
+      : `\nThe conversation above stops just before your final reply of the latest turn. That reply, which the user read, was:\n<final_reply>\n${lastAnswer}\n</final_reply>\nReview it together with the work: claims, summaries and caveats in it count as things the user has been told.\n`
+
   const calibration =
     reactions.length === 0
       ? ''
@@ -87,6 +98,7 @@ export function reviewPrompt(recent: readonly string[], muted: readonly string[]
 
 Stop working on the task. For this one reply you are a reviewer, not the assistant above. Tool calls are disabled and the main session will not see your answer; only the user will, in a small banner.
 
+${finalAnswer}
 Look back at the work done in this conversation, especially the latest turn, and decide whether the user is likely to have a blind spot that will cost them. A blind spot is one of:
 - decision: you (the assistant) picked an approach, default, scope cut or trade-off on your own, and the user never weighed in on it.
 - risk: something in the result may be wrong, fragile or unsafe: a failing or skipped check, an assumption you could not confirm, a change with side effects outside what was asked.

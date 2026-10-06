@@ -29,6 +29,7 @@ import {
 
 const finding = atom({ plugin: 'blind-spots', key: 'finding' } as const, null)
 const lastReview = atom({ plugin: 'blind-spots', key: 'lastReview' } as const, null)
+const lastAnswer = atom({ plugin: 'blind-spots', key: 'lastAnswer' } as const, null)
 
 const DEFAULT_MIN_TOOL_CALLS = 8
 
@@ -81,11 +82,15 @@ async function recordFate($: EngineInterface, ended: Finding, end: FindingEnd) {
   await $.store.set('quiet', withQuiet(quiet, root, afterFate(quiet[root], fate, now)))
 }
 
-async function endFinding($: EngineInterface, end: FindingEnd) {
-  const ended = await read($, finding)
-  if (ended === null) return
-  await update($, finding, () => null)
-  await recordFate($, ended, end)
+/** Ends the finding with `id`; a no-op once it is no longer the one shown. */
+async function endFinding($: EngineInterface, id: string, end: FindingEnd) {
+  let ended: Finding | null = null
+  await update($, finding, current => {
+    ended = current?.id === id ? current : null
+
+    return ended === null ? current : null
+  })
+  if (ended !== null) await recordFate($, ended, end)
 }
 
 async function review($: EngineInterface): Promise<ReviewRecord> {
@@ -94,7 +99,8 @@ async function review($: EngineInterface): Promise<ReviewRecord> {
     const recent = strings(await $.store.get('recent'))
     const muted = strings(await $.store.get('muted'))
     const summary = reactionSummary(reactions(await $.store.get('reactions')))
-    const reply = await $.model.fork({ prompt: reviewPrompt(recent, muted, summary) })
+    const answer = await read($, lastAnswer)
+    const reply = await $.model.fork({ prompt: reviewPrompt(recent, muted, summary, answer) })
     const record = await conclude($, reply)
     await update($, lastReview, () => record)
 
@@ -127,20 +133,22 @@ async function conclude($: EngineInterface, reply: ModelForkResult): Promise<Rev
   const { headline } = verdict.finding
   if (mentions([...recent, ...muted], headline)) return { at, outcome: 'muted', detail: headline }
 
-  await endFinding($, 'replaced')
+  const replaced = await read($, finding)
+  if (replaced !== null) await endFinding($, replaced.id, 'replaced')
   await $.store.set('recent', withTopic(recent, headline, MAX_RECENT))
-  await update($, finding, () => ({ ...verdict.finding, isOpen: false, wasOpened: false, promptsUnread: 0 }))
+  const shown: Finding = { ...verdict.finding, id: crypto.randomUUID(), isOpen: false, wasOpened: false, promptsUnread: 0 }
+  await update($, finding, () => shown)
 
   return { at, outcome: 'flagged', detail: headline }
 }
 
-async function mute($: EngineInterface, headline: string) {
-  await $.store.set('muted', withTopic(strings(await $.store.get('muted')), headline, MAX_MUTED))
-  await endFinding($, 'muted')
+async function mute($: EngineInterface, muted: Finding) {
+  await $.store.set('muted', withTopic(strings(await $.store.get('muted')), muted.headline, MAX_MUTED))
+  await endFinding($, muted.id, 'muted')
 }
 
-async function toggle($: EngineInterface) {
-  await update($, finding, f => (f === null ? f : { ...f, isOpen: !f.isOpen, wasOpened: true }))
+async function toggle($: EngineInterface, id: string) {
+  await update($, finding, f => (f?.id === id ? { ...f, isOpen: !f.isOpen, wasOpened: true } : f))
 }
 
 async function askClaude($: EngineInterface, shown: Finding) {
@@ -156,18 +164,18 @@ async function askClaude($: EngineInterface, shown: Finding) {
 
     return
   }
-  await endFinding($, 'asked')
+  await endFinding($, shown.id, 'asked')
 }
 
 async function countUnreadPrompt($: EngineInterface) {
   const shown = await read($, finding)
   if (shown === null || shown.wasOpened) return
   if (shown.promptsUnread + 1 >= PROMPTS_BEFORE_EXPIRY) {
-    await endFinding($, 'expired')
+    await endFinding($, shown.id, 'expired')
 
     return
   }
-  await update($, finding, f => (f === null ? f : { ...f, promptsUnread: f.promptsUnread + 1 }))
+  await update($, finding, f => (f?.id === shown.id ? { ...f, promptsUnread: f.promptsUnread + 1 } : f))
 }
 
 async function status($: EngineInterface, minToolCalls: number): Promise<string> {
@@ -220,6 +228,7 @@ export const register: Register = (on, options) => {
     const toolCalls = toolCallsByTurn.get(e.turnId) ?? 0
     toolCallsByTurn.delete(e.turnId)
     if (e.reason !== 'answer') return result
+    await update($, lastAnswer, () => e.answer)
 
     const { threshold } = await currentThreshold($, minToolCalls)
     if (isReviewDue(toolCalls, threshold, isReviewing)) {
@@ -284,7 +293,7 @@ export const register: Register = (on, options) => {
             plain
             hotkey="d"
             label={shown.isOpen ? 'Hide details' : 'Details'}
-            onPress={() => toggle($)}
+            onPress={() => toggle($, shown.id)}
           />
           <Button key="ask" plain hotkey="a" label="Ask Claude" onPress={() => askClaude($, shown)} />
           <Button
@@ -292,9 +301,9 @@ export const register: Register = (on, options) => {
             plain
             hotkey="m"
             label={shown.kind === 'concept' ? 'I know this' : 'Mute topic'}
-            onPress={() => mute($, shown.headline)}
+            onPress={() => mute($, shown)}
           />
-          <Button key="close" plain hotkey="x" role="dismiss" label="Close" onPress={() => endFinding($, 'closed')} />
+          <Button key="close" plain hotkey="x" role="dismiss" label="Close" onPress={() => endFinding($, shown.id, 'closed')} />
         </Box>
       </Box>
     )
