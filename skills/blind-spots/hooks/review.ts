@@ -87,7 +87,7 @@ export function reviewPrompt(
   const finalAnswer =
     lastAnswer === null
       ? ''
-      : `\nThe conversation above stops just before your final reply of the latest turn. That reply, which the user read, was:\n<final_reply>\n${lastAnswer}\n</final_reply>\nReview it together with the work: claims, summaries and caveats in it count as things the user has been told.\n`
+      : `The conversation above stops just before your final reply of the latest turn. That reply was:\n<final_reply>\n${lastAnswer}\n</final_reply>\nReview it together with the work. People skim long replies: a decision, caveat or risk stated in this reply, even clearly, can still be the one thing to put in front of the user. Do not skip a point just because the reply already mentions it.\n`
 
   const calibration =
     reactions.length === 0
@@ -96,10 +96,12 @@ export function reviewPrompt(
 
   return `[blind-spots review: an automated request from a Claude Code plugin, not a message the user typed]
 
-Stop working on the task. For this one reply you are a reviewer, not the assistant above. Tool calls are disabled and the main session will not see your answer; only the user will, in a small banner.
+Stop working on the task. For this one reply you are a reviewer, not the assistant above. Tool calls are disabled and the main session will not see your answer; only the user will, in a one-line banner above their prompt.
+
+The user is busy, switches between tasks, and skims. The banner is their takeaway from this work: the single thing they most need to know before they move on, whether it is buried in the tool calls or sits in plain sight in the final reply.
 
 ${finalAnswer}
-Look back at the work done in this conversation, especially the latest turn, and decide whether the user is likely to have a blind spot that will cost them. A blind spot is one of:
+Look back at the work done in this conversation, especially the latest turn, and pick the one thing the user should not miss. It is one of:
 - decision: you (the assistant) picked an approach, default, scope cut or trade-off on your own, and the user never weighed in on it.
 - risk: something in the result may be wrong, fragile or unsafe: a failing or skipped check, an assumption you could not confirm, a change with side effects outside what was asked.
 - gap: something the user probably believes is done but is not: a step left out, a test not run, a TODO, a disabled feature, an unverified claim.
@@ -107,20 +109,21 @@ Look back at the work done in this conversation, especially the latest turn, and
 
 Raise it only if ALL hold:
 1. A reasonable user would want to know before they move on: ignoring it would plausibly cost real time, money, correctness or trust.
-2. The user has not already engaged with it. If they asked about it, discussed it, or it was the headline of a reply, it is not a blind spot. Something mentioned once in passing inside a long reply or a long series of tool calls can still be one.
+2. The user has not taken it up themselves: they did not ask about it, answer it, or discuss it in their own messages. What the assistant wrote does not count as the user knowing it, however prominently it was said.
 3. The conversation itself supports it. Do not speculate beyond it.
 
-Pick the single most important one; a concept wins only when there is no decision, risk or gap worth raising. Raising nothing is the normal, expected answer.
+Pick the single most important one; a concept wins only when there is no decision, risk or gap worth raising. A long turn that changed code or made choices usually has one point worth a line, but do not invent stakes: when nothing meets rule 1, raise nothing.
 ${listed('Already raised recently; do not raise these again:', recent)}${listed('The user muted these topics or said they already know them; never raise them:', muted)}${calibration}
 Reply with ONE JSON object and nothing else, no code fence.
 
 Nothing to raise:
-{"flag": false}
+{"flag": false, "reason": "..."}
 
 Something to raise:
-{"flag": true, "kind": ${KINDS.map(kind => `"${kind}"`).join(' | ')}, "headline": "...", "details": "...", "next_step": "..."}
+{"flag": true, "kind": ${KINDS.map(kind => `"${kind}"`).join(' | ')}, "headline": "...", "details": "...", "next_step": "...", "reason": "..."}
 
-- headline: at most 12 words, a plain statement of the problem that makes sense without having read the conversation. Name the concrete thing (the file, endpoint, flag, test).
+- reason: one sentence for the plugin's log, not shown in the banner: the strongest candidate you considered and why it did or did not clear the bar.
+- headline: at most 12 words, the takeaway itself, written so that someone who reads nothing else still gets the point. It must make sense without having read the conversation. Name the concrete thing (the file, endpoint, flag, test).
 - details: Markdown, at most 120 words. What happened, why it matters, and how sure you are. Define any term the user has not used themselves. Do not refer to "the second option" or similar; restate what you mean. For a concept, explain it from scratch with a small concrete example from this work.
 - next_step: one short imperative sentence the user can act on (check, decide, ask for). For a concept, say where in their work it will matter.
 

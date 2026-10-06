@@ -40,6 +40,8 @@ export type ReviewRecord = {
   at: number
   outcome: ReviewOutcome
   detail?: string
+  /** The reviewer's raw reply, when the model answered. */
+  reply?: string
 }
 
 declare module 'claude-code' {

@@ -9,7 +9,7 @@ The reviewer looks for four kinds of finding:
 - **gap**: something you probably think is done but isn't: a skipped test, a TODO, an unverified claim.
 - **concept**: a system, mechanism or design that shapes the work and that you haven't shown you understand, where misunderstanding it would likely lead you astray later. The explanation starts from scratch, and the next step says where it will matter for you.
 
-Most reviews find nothing, and then nothing is shown. A concept is raised only when there is no more urgent decision, risk or gap.
+The banner is meant as your takeaway from a long turn: the one point you should not miss, even when the agent already stated it somewhere in a long reply, because long replies get skimmed. What counts as known is only what you took up in your own messages. When nothing has a real consequence, nothing is shown. A concept is raised only when there is no more urgent decision, risk or gap.
 
 ## Using it
 
@@ -26,7 +26,7 @@ A finding you leave unopened expires after you send three prompts.
 
 The `/blind-spots` command:
 
-- `/blind-spots` or `/blind-spots status` shows the current review threshold, your recent reactions per kind, and how the last review went, including the HTTP status when the model request failed.
+- `/blind-spots` or `/blind-spots status` shows the current review threshold, your recent reactions per kind, and how the last review went, including the HTTP status when the model request failed. It also shows the reviewer's raw reply, whose `reason` names the strongest candidate it considered and why it did or did not raise it, so a "nothing to raise" can be checked.
 - `/blind-spots review` runs a review right away, whatever the threshold.
 - `/blind-spots unmute` forgets the muted and recently raised topics.
 - `/blind-spots reset` forgets everything learned: muted topics, reactions, and the back-off of every project.
@@ -60,7 +60,7 @@ Set it in the `/config` menu, or in settings under `pluginConfigs.blind-spots`.
 - A `turn.step` hook counts the main agent's tool calls in each turn. Subagent steps are not counted.
 - A `turn.complete` hook starts the review once the turn has ended normally and reached the current threshold. It does not wait for the review, so the session is free right away.
 - The review is a `$.model.fork` call: the session's own conversation is sent again with a review prompt after it, tools disabled, on the session's model and connection. That is why it works whichever way Claude Code reaches the model (direct API, a gateway, or a cloud provider). It also means each review costs a full request over the conversation, cheaper when the prompt cache still holds it.
-- A fork replays the main thread's last request, which ends before the turn's final reply. The plugin keeps each main turn's final answer and adds it to the review prompt, so the agent's closing claims and summaries are reviewed too.
+- A fork replays the main thread's last request, which ends before the turn's final reply. The plugin keeps each main turn's final answer and adds it to the review prompt, so the agent's closing claims, summaries and caveats are reviewed too, and can themselves be what the banner surfaces.
 - The reviewer answers in JSON (`hooks/review.ts` has the prompt and the parser). Replies it cannot read are reported by `/blind-spots status`, never shown as findings.
 - `hooks/feedback.ts` holds the fate, back-off and summary rules as pure functions.
 - The finding being shown lives in session state. Muted and recent topics, reactions and the per-project back-off (keyed by the session's project root) live in the plugin's store, a JSON file under the Claude Code configuration directory, so they carry over to later sessions.

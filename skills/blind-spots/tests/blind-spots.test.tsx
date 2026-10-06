@@ -108,6 +108,7 @@ function shown(over: Partial<Finding> = {}): Finding {
 describe('reading the reviewer reply', () => {
   test('a clean or a flagged reply is read, fenced or not', () => {
     expect(readVerdict('{"flag": false}')).toEqual({ kind: 'clean' })
+    expect(readVerdict('{"flag": false, "reason": "Every caveat was minor."}')).toEqual({ kind: 'clean' })
     expect(readVerdict('```json\n' + GAP + '\n```').kind).toBe('flagged')
     expect(readVerdict(flagged('concept', 'How the prompt cache bills reviews')).kind).toBe('flagged')
   })
@@ -282,6 +283,23 @@ describe('the banner', () => {
     expect(await ui.find({ type: 'Text', text: /cache key ignores the locale/ })).toBeDefined()
     expect(await blindSpots($, 'status')).toContain('gap: 1 ignored.')
     await ui.unmount()
+  })
+
+  test("the status shows the reviewer's last reply, so a clean verdict can be audited", async ($, on) => {
+    const reply = '{"flag": false, "reason": "The prod spawner version was the strongest candidate, but the answer already gave its impact."}'
+    world(on, [reply])
+
+    await blindSpots($, 'review')
+    expect(await blindSpots($, 'status')).toContain(`Reviewer reply:\n${reply}`)
+  })
+
+  test('a long reviewer reply is cut in the status, saying how much was left out', async ($, on) => {
+    world(on, [`{"flag": false, "reason": "${'x'.repeat(3000)}"}`])
+
+    await blindSpots($, 'review')
+    const status = await blindSpots($, 'status')
+    expect(status).toContain('more characters not shown')
+    expect(status.length).toBeLessThan(2600)
   })
 
   test('a failed model request shows in the status', async ($, on) => {
