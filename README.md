@@ -38,7 +38,7 @@ With Walkthrough Plugin 0.6.0 or later and walkthrough skill 0.4.0 or later, you
 
 ### blind-spots
 
-After a long turn, a reviewer pass looks for the one decision, risk or gap you are likely to have missed, and shows it in a banner above the prompt, with details, a way to discuss it in the main session, and a way to mute the topic. `/blind-spots` shows the last review and runs one on demand.
+After a long turn, a reviewer pass looks for the one decision, risk, gap or concept you are likely to have missed, and shows it in a banner above the prompt, with details, a way to discuss it in the main session, and a way to mute the topic. It learns from how you react: findings you ignore make it review less often in that project and raise its bar for that kind of finding. `/blind-spots` shows the last review and what it has learned, and runs a review on demand.
 
 Unlike the other plugins, this one is a hooks module (TypeScript function hooks), not a skill. See [its README](skills/blind-spots/README.md).
 

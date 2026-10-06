@@ -28,7 +28,7 @@ skills/
 - **managing-youtrack** — Interacts with YouTrack issue tracker via REST API. Manages issues, drafts, comments, tags, links, time tracking, custom fields, saved queries, users, and groups.
 - **managing-github** — Interacts with GitHub via the gh CLI: issues, PRs, review threads, comments, and search.
 - **walkthrough** — Authors and revises inline code and diff walkthroughs in IntelliJ IDEA via the walkthrough-plugin MCP tools.
-- **blind-spots** — A hooks-module plugin: after a long turn, a tool-less fork of the session reviews it and flags one missed decision, risk or gap in a banner above the prompt.
+- **blind-spots** — A hooks-module plugin: after a long turn, a tool-less fork of the session reviews it and flags one missed decision, risk, gap or concept in a banner above the prompt; how the user reacts adjusts how often it reviews and what it raises.
 
 ## Writing Skills
 

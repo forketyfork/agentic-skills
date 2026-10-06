@@ -40,7 +40,7 @@
     },
     {
       "name": "blind-spots",
-      "description": "After a long turn, a reviewer pass flags above the prompt the one decision, risk or gap you are likely to have missed.",
+      "description": "After a long turn, a reviewer pass flags above the prompt the one decision, risk, gap or concept you are likely to have missed, and learns from how you react.",
       "source": "./skills/blind-spots",
       "version": "0.1.0"
     }
